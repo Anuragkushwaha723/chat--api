@@ -18,7 +18,7 @@ exports.postUserSignUp = async (req, res, next) => {
                 return res.status(500).json({ message: 'User already exists,Please Login' });
             } else {
                 await User.create({ name, email, password: hash, phone: phoneNum });
-                return res.status(201).json({ messagre: 'Successfully signing' })
+                return res.status(201).json({ message: 'Successfully signed up' })
             }
         });
     } catch (error) {
