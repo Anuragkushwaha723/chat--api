@@ -14,8 +14,8 @@ exports.postChatMessages = async (req, res, next) => {
 }
 exports.getChatMessages = async (req, res, next) => {
     try {
-        let data = await Messages.findAll({
-            attributes: ['messages'],
+        let promise1 = Messages.findAll({
+            attributes: ['messages', 'id'],
             include: [
                 {
                     model: User,
@@ -23,7 +23,9 @@ exports.getChatMessages = async (req, res, next) => {
                 }
             ]
         });
-        return res.status(201).json(data);
+        let promise2 = User.findAll({ attributes: ['name'] });
+        let [data, users] = await Promise.all([promise1, promise2]);
+        return res.status(201).json({ messages: data, users: users });
     } catch (error) {
         res.status(403).json({ message: 'Something went wrong' });
     }
