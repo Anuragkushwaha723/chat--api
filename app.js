@@ -22,6 +22,8 @@ app.use('/chats', ChatRoutes);
 app.use('/groups', groupRoutes);
 userModel.hasMany(MessagesModel);
 MessagesModel.belongsTo(userModel);
+groupModel.hasMany(MessagesModel);
+MessagesModel.belongsTo(groupModel);
 userModel.belongsToMany(groupModel, { through: userGroupModel });
 groupModel.belongsToMany(userModel, { through: userGroupModel });
 sequelize.sync()

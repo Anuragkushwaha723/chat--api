@@ -1,13 +1,22 @@
 const Messages = require('../models/messages');
 const User = require('../models/user');
+const Sequelize = require('sequelize');
 exports.postChatMessages = async (req, res, next) => {
     try {
         const { messages } = req.body;
+        let gid = req.query.gid;
         if (!messages) {
             return res.status(500).json({ message: 'Sending empty messages are not allowed' });
         }
-        await req.user.createMessage({ messages: messages });
-        return res.status(201).json({ messages: 'Successfully updated the message in database' });
+        let data1 = await req.user.getGroups({ where: { id: gid } });
+        if (data1.length > 0) {
+            let groupId = data1[0].id;
+            await req.user.createMessage({ messages: messages, groupId: groupId });
+            return res.status(201).json({ messages: 'Successfully updated the message in database' });
+        } else {
+            throw new Error();
+        }
+
     } catch (error) {
         res.status(403).json({ message: 'Something went wrong' });
     }
@@ -27,20 +36,27 @@ exports.getChatMessages = async (req, res, next) => {
         } else {
             lstChtId = + req.query.lstChtId + 1;
         }
-
-        let promise1 = Messages.findAll({
-            offset: lstChtId - 1,
-            attributes: ['messages', 'id'],
-            include: [
-                {
-                    model: User,
-                    attributes: ['name']
-                }
-            ]
-        });
-        let promise2 = User.findAll({ offset: lstUsrId - 1, attributes: ['name', 'id'] });
-        let [data, users] = await Promise.all([promise1, promise2]);
-        return res.status(201).json({ messages: data, users: users });
+        let gid = req.query.gid;
+        let data1 = await req.user.getGroups({ where: { id: gid } });
+        if (data1.length > 0) {
+            let groupId = data1[0].id;
+            let { gt } = Sequelize.Op
+            let promise1 = Messages.findAll({
+                attributes: ['messages', 'id'],
+                where: { id: { [gt]: lstChtId - 1 }, groupId: groupId },
+                include: [
+                    {
+                        model: User,
+                        attributes: ['name']
+                    }
+                ]
+            });
+            let promise2 = data1[0].getUsers({ where: { id: { [gt]: lstUsrId - 1 } }, attributes: ['name', 'id'] });
+            let [data, users] = await Promise.all([promise1, promise2]);
+            return res.status(201).json({ messages: data, users: users });
+        } else {
+            throw new Error();
+        }
     } catch (error) {
         res.status(403).json({ message: 'Something went wrong' });
     }
