@@ -4,4 +4,8 @@ const groupControllers = require('../controllers/group');
 const router = express.Router();
 router.post('/create-group', authenticateRoutes.authenticate, groupControllers.postGroupData);
 router.get('/get-all-group', authenticateRoutes.authenticate, groupControllers.getGroupData);
+router.post('/add-user-in-group', authenticateRoutes.authenticate, groupControllers.postAddUserInGroup);
+router.get('/get-users-in-group', authenticateRoutes.authenticate, groupControllers.getAllUserInGroup);
+router.get('/delete-users-in-group', authenticateRoutes.authenticate, groupControllers.getDeleteUsersInGroup);
+router.get('/make-admin-users-in-group', authenticateRoutes.authenticate, groupControllers.getCreateAdminOfUsersInGroup);
 module.exports = router;
