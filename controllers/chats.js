@@ -1,6 +1,7 @@
 const Messages = require('../models/messages');
 const User = require('../models/user');
 const Sequelize = require('sequelize');
+const S3Service = require('../services/S3Service');
 exports.postChatMessages = async (req, res, next) => {
     try {
         const { messages } = req.body;
@@ -12,6 +13,27 @@ exports.postChatMessages = async (req, res, next) => {
         if (data1.length > 0) {
             let groupId = data1[0].id;
             await req.user.createMessage({ messages: messages, groupId: groupId });
+            return res.status(201).json({ messages: 'Successfully updated the message in database' });
+        } else {
+            throw new Error();
+        }
+
+    } catch (error) {
+        res.status(403).json({ message: 'Something went wrong' });
+    }
+}
+exports.postChatFiles = async (req, res, next) => {
+    try {
+        const uploadedFile = req.files;
+        let gid = req.query.gid;
+        if (!req.files || Object.keys(req.files).length === 0) {
+            return res.status(400).send('No files were uploaded.');
+        }
+        const fileUrl = await S3Service.uploadToS3(uploadedFile.file.data, uploadedFile.file.name);
+        let data1 = await req.user.getGroups({ where: { id: gid } });
+        if (data1.length > 0) {
+            let groupId = data1[0].id;
+            await req.user.createMessage({ messages: fileUrl, groupId: groupId });
             return res.status(201).json({ messages: 'Successfully updated the message in database' });
         } else {
             throw new Error();
